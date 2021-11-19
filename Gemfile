@@ -15,3 +15,5 @@ gem 'mqtt', '~> 0.5.0'
 gem 'dotenv', '~> 2.7'
 
 gem 'rubocop', '~> 1.23', require: false
+
+gem 'rake', '~> 13.0'
