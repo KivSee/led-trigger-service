@@ -26,7 +26,7 @@ module Kivsee
             ws.on :message do |event|
               data = JSON.parse event.data
               p data
-              @trigger_state.async.player_offset_update(data["uuid"], data["play_seq_id"], data["start_time_millis_since_epoch"])
+              @trigger_state.async.player_offset_update(data["uuid"], data["play_seq_id"], data["song_is_playing"], data["start_time_millis_since_epoch"])
             end
 
             ws.on :close do |event|

@@ -32,3 +32,9 @@ post '/song/:song_name/play' do
   trigger_state.set_song(trigger_name, sequence_guid, data['uuid'], data['play_seq_id'])
   data['operation_desc']
 end
+
+post '/song/stop' do
+    data = player_service.stop 
+    trigger_state.set_song(nil, nil, data['uuid'], data['play_seq_id'])
+    data["operation_desc"]
+end

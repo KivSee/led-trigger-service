@@ -21,6 +21,10 @@ module Kivsee
                                       })
           @client.publish(TOPIC_NAME, trigger_msg, true, 1)
         end
+
+        def publish_no_trigger()
+          @client.publish(TOPIC_NAME, JSON.generate({}), true, 1)
+        end
       end
     end
   end
