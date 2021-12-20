@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'dotenv/load'
+require 'json'
 
 require_relative './services/time'
 require_relative './services/mqtt'
@@ -27,8 +28,10 @@ player_events = Kivsee::Trigger::PlayerEvents.new(trigger_state, ENV.fetch('PLAY
 
 post '/song/:song_name/play' do
   trigger_name = params['song_name']
-  sequence_guid = led_sequence_service.latest_led_sequence_guid(trigger_name)
-  data = player_service.play_song(trigger_name)
+  data = JSON.parse(request.body.read)
+  sequence_guid = data["sequence_guid"] ? data["sequence_guid"] : led_sequence_service.latest_led_sequence_guid(trigger_name)
+  start_offset_ms = data["start_offset_ms"] ? data["start_offset_ms"] : 0
+  data = player_service.play_song(trigger_name, start_offset_ms)
   trigger_state.set_song(trigger_name, sequence_guid, data['uuid'], data['play_seq_id'])
   data['operation_desc']
 end
