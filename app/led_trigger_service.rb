@@ -17,7 +17,7 @@ require 'sinatra'
 require 'sinatra/reloader' if development?
 
 time_service = Kivsee::Trigger::Services::TimeService.new
-mqtt_service = Kivsee::Trigger::Services::MqttService.new(ENV.fetch('MQTT_BROKER_IP'))
+mqtt_service = Kivsee::Trigger::Services::MqttService.new(ENV.fetch('BROKER_URL'))
 led_sequence_service = Kivsee::Trigger::Services::LedSequenceService.new(ENV.fetch('LED_SEQ_SERVICE_IP'),
                                                                          ENV.fetch('LED_SEQ_SERVICE_PORT', 8082))
 player_service = Kivsee::Trigger::Services::PlayerService.new(ENV.fetch('PLAYER_IP'), ENV.fetch('PLAYER_PORT', 8080))
