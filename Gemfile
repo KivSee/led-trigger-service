@@ -25,3 +25,5 @@ gem 'minitest', '~> 5.14'
 gem 'sinatra-contrib', '~> 2.1'
 
 gem 'celluloid', '~> 0.18.0'
+
+gem "puma", "~> 5.5"
