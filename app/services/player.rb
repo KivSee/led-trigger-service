@@ -6,6 +6,7 @@ require 'json'
 module Kivsee
   module Trigger
     module Services
+      # interact with the player to play and stop audio
       class PlayerService
         def initialize(player_service_host, player_service_port)
           @clinet = Faraday.new(url: "http://#{player_service_host}:#{player_service_port}") do |faraday|
@@ -21,7 +22,7 @@ module Kivsee
           JSON.parse res.body
         end
 
-        def stop()
+        def stop
           res = @clinet.put('/api/current-song',
                             {}.to_json)
           JSON.parse res.body

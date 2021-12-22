@@ -22,22 +22,36 @@ led_sequence_service = Kivsee::Trigger::Services::LedSequenceService.new(ENV.fet
                                                                          ENV.fetch('LED_SEQ_SERVICE_PORT', 8082))
 player_service = Kivsee::Trigger::Services::PlayerService.new(ENV.fetch('PLAYER_IP'), ENV.fetch('PLAYER_PORT', 8080))
 
-trigger_state = Kivsee::Trigger::TriggerState.new(mqtt_service, time_service)
+trigger_state = Kivsee::Trigger::TriggerState.new(mqtt_service)
 player_events = Kivsee::Trigger::PlayerEvents.new(trigger_state, ENV.fetch('PLAYER_IP'),
                                                   ENV.fetch('PLAYER_WS_PORT', 9002))
 
+player_events.start
+
+before do
+  body_content = request.body.read.to_s
+  @req_data = body_content.empty? ? {} : JSON.parse(body_content)
+end
+
 post '/song/:song_name/play' do
   trigger_name = params['song_name']
-  data = JSON.parse(request.body.read)
-  sequence_guid = data["sequence_guid"] ? data["sequence_guid"] : led_sequence_service.latest_led_sequence_guid(trigger_name)
-  start_offset_ms = data["start_offset_ms"] ? data["start_offset_ms"] : 0
+  sequence_guid = @req_data['sequence_guid'] || led_sequence_service.latest_led_sequence_guid(trigger_name)
+  start_offset_ms = @req_data['start_offset_ms'] || 0
   data = player_service.play_song(trigger_name, start_offset_ms)
   trigger_state.set_song(trigger_name, sequence_guid, data['uuid'], data['play_seq_id'])
   data['operation_desc']
 end
 
-post '/song/stop' do
-    data = player_service.stop 
-    trigger_state.set_song(nil, nil, data['uuid'], data['play_seq_id'])
-    data["operation_desc"]
+post '/trigger/:trigger_name' do
+  player_service.stop
+  trigger_name = params['trigger_name']
+  sequence_guid = @req_data['sequence_guid'] || led_sequence_service.latest_led_sequence_guid(trigger_name)
+  start_time_millis_since_epoch = @req_data['start_time_millis_since_epoch'] || time_service.current_ms_since_epoch
+  trigger_state.set_trigger(trigger_name, sequence_guid, start_time_millis_since_epoch)
+  "started trigger #{trigger_name}"
+end
+
+post '/stop' do
+  player_service.stop
+  trigger_state.stop
 end

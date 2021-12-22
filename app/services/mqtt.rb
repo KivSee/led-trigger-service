@@ -5,6 +5,7 @@ require 'mqtt'
 module Kivsee
   module Trigger
     module Services
+      # access the system mqtt broker to communicate with other components and things
       class MqttService
         TOPIC_NAME = 'trigger'
         private_constant :TOPIC_NAME
@@ -22,7 +23,7 @@ module Kivsee
           @client.publish(TOPIC_NAME, trigger_msg, true, 1)
         end
 
-        def publish_no_trigger()
+        def publish_no_trigger
           @client.publish(TOPIC_NAME, JSON.generate({}), true, 1)
         end
       end
