@@ -10,4 +10,4 @@ WORKDIR /app
 COPY Gemfile Gemfile.lock ./
 RUN bundle install
 COPY . .
-CMD ruby app/led_trigger_service.rb -o 0.0.0.0
+CMD ["ruby", "app/led_trigger_service.rb", "-o", "0.0.0.0"]
