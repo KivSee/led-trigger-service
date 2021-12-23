@@ -8,6 +8,7 @@ RUN apt-get -y install build-essential
 RUN	gem install eventmachine
 WORKDIR /app
 COPY Gemfile Gemfile.lock ./
+RUN bundle config set without 'development test'
 RUN bundle install
 COPY . .
 CMD ["ruby", "app/led_trigger_service.rb", "-o", "0.0.0.0"]
