@@ -19,13 +19,17 @@ module Kivsee
         def play_song(song_name, start_offset_ms)
           res = @clinet.put('/api/current-song',
                             { "file_id": "/#{song_name}.wav", "start_offset_ms": start_offset_ms }.to_json)
-          JSON.parse res.body
+          return res.success?, JSON.parse(res.body)
+        rescue => e
+          return false, {"operation_desc" => e.message}
         end
 
         def stop
           res = @clinet.put('/api/current-song',
                             {}.to_json)
           JSON.parse res.body
+        rescue => e
+          return false, {"operation_desc" => e.message}
         end
       end
     end
