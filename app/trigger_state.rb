@@ -41,8 +41,10 @@ module Kivsee
       end
 
       def stop
+        current_trigger = @desired_state.trigger_name
         @desired_state.clear
         publish_no_trigger
+        current_trigger
       end
 
       # set the trigger without monitoring the song

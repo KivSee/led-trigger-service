@@ -67,5 +67,6 @@ post '/stop' do
   player_success, player_res = player_service.stop
   return 400, player_res['operation_desc'] unless player_success
 
-  trigger_state.stop
+  stopped_trigger = trigger_state.stop
+  "stopped trigger #{stopped_trigger}"
 end
