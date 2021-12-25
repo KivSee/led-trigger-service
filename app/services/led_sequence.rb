@@ -18,11 +18,12 @@ module Kivsee
 
         def latest_led_sequence_guid(trigger_name)
           response = @clinet.get "/triggers/#{trigger_name}/guid"
-          return nil, "no sequence found with name '#{trigger_name}'" if !response.success?
+          return nil, "no sequence found with name '#{trigger_name}'" unless response.success?
+
           data = JSON.parse response.body
-          return data['guid'], ""
-        rescue => e
-          return nil, e.message
+          [data['guid'], '']
+        rescue StandardError => e
+          [nil, e.message]
         end
       end
     end
