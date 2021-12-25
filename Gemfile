@@ -22,3 +22,11 @@ end
 group :test, :development do
   gem 'minitest', '~> 5.14'
 end
+
+gem 'opentelemetry-sdk', '~> 1.0'
+
+gem 'opentelemetry-exporter-jaeger', '~> 0.20.1'
+
+gem 'opentelemetry-instrumentation-sinatra', '~> 0.19.3'
+
+gem 'opentelemetry-instrumentation-faraday', '~> 0.19.3'
