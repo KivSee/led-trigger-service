@@ -105,7 +105,6 @@ module Kivsee
 
         waiting_for_song = @song_wait_future != nil
 
-        p "player update: #{player_uuid} #{player_play_seq_id} #{song_is_playing}"
         signal_previous_waiters_on_player_update player_uuid, player_play_seq_id, song_is_playing
 
       end
