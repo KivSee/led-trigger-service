@@ -28,6 +28,13 @@ module Kivsee
       attr_accessor :uuid, :play_seq_id, :song_is_playing, :start_time_millis_since_epoch
     end
 
+    # It seems that celluloid future signal function accepts an undocumented parameter
+    # that is an object that return it's value from a 'value' attribute 
+    # e.g. `response.value` should return what we actually want to resolve the future to.
+    #
+    # I wish it was documented but this is how I got it to work.
+    # celluloid seems not active or well maintained 
+    # but it would be great to open an issue one day to clarify how to use future object correctly.
     class SongComplitionFutrueResult
       attr_reader :value
 
