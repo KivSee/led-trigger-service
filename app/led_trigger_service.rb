@@ -37,6 +37,7 @@ end
 
 post '/song/:song_name/play' do
   trigger_name = params['song_name']
+  return_on_completion = params['return_on_completion'] == 'true'
   sequence_guid = @req_data['sequence_guid']
   unless sequence_guid
     sequence_guid, sequence_msg = led_sequence_service.latest_led_sequence_guid(trigger_name)
@@ -46,9 +47,9 @@ post '/song/:song_name/play' do
   player_success, data = player_service.play_song(trigger_name, start_offset_ms)
   return 404, data['operation_desc'] unless player_success
 
-  trigger_state.set_song(trigger_name, sequence_guid, data['uuid'], data['play_seq_id'])
-  data['operation_desc']
-end
+  status = trigger_state.set_song(trigger_name, sequence_guid, data['uuid'], data['play_seq_id'], return_on_completion)
+  return status || data['operation_desc']
+end 
 
 post '/trigger/:trigger_name' do
   player_service.stop
