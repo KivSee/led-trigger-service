@@ -28,6 +28,21 @@ module Kivsee
       attr_accessor :uuid, :play_seq_id, :song_is_playing, :start_time_millis_since_epoch
     end
 
+    # It seems that celluloid future signal function accepts an undocumented parameter
+    # that is an object that return it's value from a 'value' attribute 
+    # e.g. `response.value` should return what we actually want to resolve the future to.
+    #
+    # I wish it was documented but this is how I got it to work.
+    # celluloid seems not active or well maintained 
+    # but it would be great to open an issue one day to clarify how to use future object correctly.
+    class SongComplitionFutrueResult
+      attr_reader :value
+
+      def initialize(value)
+        @value = value
+      end
+    end
+
     # monitor the desired vs current state of the trigger and send updates when needed
     class TriggerState
       include Celluloid
@@ -35,9 +50,10 @@ module Kivsee
       def initialize(mqtt_service)
         @mqtt_service = mqtt_service
 
-        @player_state = PlayerState.new
+        @player_latest_request = PlayerState.new
         @desired_state = DesiredState.new
         @current_player_state = CurrentPlayerState.new
+        @song_wait_future = nil
       end
 
       def stop
@@ -56,15 +72,27 @@ module Kivsee
       end
 
       # this function set the trigger on a song and monitor player updates on the start time
-      def set_song(trigger_name, sequence_guid, player_uuid, player_play_seq_id)
-        @player_state.uuid = player_uuid
-        @player_state.play_seq_id = player_play_seq_id
+      def set_song(trigger_name, sequence_guid, player_uuid, player_play_seq_id, return_on_completion)
+
+        signal_previous_waiters_on_new_song
+
+        @player_latest_request.uuid = player_uuid
+        @player_latest_request.play_seq_id = player_play_seq_id
 
         @desired_state.trigger_name = trigger_name
         @desired_state.sequence_guid = sequence_guid
         @desired_state.mode = MODE_PLAYER
 
         update_song_status
+
+        if return_on_completion
+          @song_wait_future = Celluloid::Future.new
+          reason_for_termination = @song_wait_future.value
+          @song_wait_future = nil
+          return reason_for_termination
+        else
+          return nil
+        end
       end
 
       def player_offset_update(player_uuid, player_play_seq_id, song_is_playing, start_time_millis_since_epoch)
@@ -72,13 +100,17 @@ module Kivsee
         @current_player_state.play_seq_id = player_play_seq_id
         @current_player_state.song_is_playing = song_is_playing
         @current_player_state.start_time_millis_since_epoch = start_time_millis_since_epoch
+
         update_song_status
+
+        signal_previous_waiters_on_player_update player_uuid, player_play_seq_id, song_is_playing
+
       end
 
       def update_song_status
         return if @desired_state.mode != MODE_PLAYER
-        return if @current_player_state.uuid != @player_state.uuid
-        return if @current_player_state.play_seq_id != @player_state.play_seq_id
+        return if @current_player_state.uuid != @player_latest_request.uuid
+        return if @current_player_state.play_seq_id != @player_latest_request.play_seq_id
 
         if @current_player_state.song_is_playing
           publish_trigger @current_player_state.start_time_millis_since_epoch
@@ -94,6 +126,39 @@ module Kivsee
       def publish_trigger(start_time_millis_since_epoch)
         @mqtt_service.publish_trigger @desired_state.sequence_guid, @desired_state.trigger_name,
                                       start_time_millis_since_epoch
+      end
+
+      def signal_previous_waiters_on_new_song
+        if @song_wait_future == nil
+          return
+        end
+
+        @song_wait_future.signal(SongComplitionFutrueResult.new "song is completed because a new one was started.")
+        @song_wait_future = nil
+      end
+
+      def signal_previous_waiters_on_player_update(player_uuid, player_play_seq_id, song_is_playing)
+        if @song_wait_future == nil
+          return nil
+        end
+
+        if @current_player_state.uuid != player_uuid
+          @song_wait_future.signal(SongComplitionFutrueResult.new "detected a new player uuid. previous song no longer relevant")
+          @song_wait_future = nil
+          return
+        end
+        
+        if player_play_seq_id > @player_latest_request.play_seq_id
+          @song_wait_future.signal(SongComplitionFutrueResult.new "a new song is playing")
+          @song_wait_future = nil
+          return
+        end
+
+        if !song_is_playing
+          @song_wait_future.signal(SongComplitionFutrueResult.new "song reached its end and is no longer playing.")
+          @song_wait_future = nil
+          return
+        end
       end
     end
   end
