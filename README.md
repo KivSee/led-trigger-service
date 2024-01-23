@@ -11,6 +11,15 @@ Trigger which plays an audio file via the wavalsaplayer and monitors the player 
 ### Simple Trigger
 Only a led sequence with no audio is triggered.
 
+## Prerequisites
+
+Use ruby version manager [rbenv](https://github.com/rbenv/rbenv?tab=readme-ov-file#installation).
+
+Install required ruby version as specified in `.ruby-version` file:
+```bash
+rbenv install x.x.x
+```
+
 ## Usage
 Install dependencies: 
 ```bash
