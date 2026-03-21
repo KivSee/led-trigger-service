@@ -59,7 +59,13 @@ post '/trigger/:trigger_name' do
     sequence_guid, sequence_msg = led_sequence_service.latest_led_sequence_guid(trigger_name)
     return 404, sequence_msg unless sequence_guid
   end
-  start_time_millis_since_epoch = @req_data['start_time_millis_since_epoch'] || time_service.current_ms_since_epoch
+  start_time_millis_since_epoch = if @req_data['start_offset_ms']
+    time_service.current_ms_since_epoch.to_i - @req_data['start_offset_ms'].to_i
+  elsif @req_data['start_time_millis_since_epoch']
+    @req_data['start_time_millis_since_epoch']
+  else
+    time_service.current_ms_since_epoch
+  end
   trigger_state.set_trigger(trigger_name, sequence_guid, start_time_millis_since_epoch)
   "started trigger #{trigger_name}"
 end
